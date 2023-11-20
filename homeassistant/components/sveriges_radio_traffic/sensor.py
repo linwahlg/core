@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_AREA_NAME, DATE, DOMAIN, INFO
+from .const import CONF_AREA_NAME, DOMAIN, INFO
 from .coordinator import SverigesRadioTrafficCoordinator
 
 # dothis: Check trafikverket Train and try to do something similar. May be difficult/impossible to "dynamically" update location with sensor integration.
@@ -31,8 +31,8 @@ async def async_setup_entry(
     area = entry.data.get("area")
     entry.data.get("name")
     # print("Name i sensor:", name)
-    names = INFO  # ["message", "time", "area"]
-
+    names = INFO
+    # print("in sensor.py:", entry.entry_id)
     coordinator: SverigesRadioTrafficCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
@@ -89,38 +89,24 @@ class TrafficSensor(CoordinatorEntity[SverigesRadioTrafficCoordinator]):
         self._attr_unique_id = f"05b972dcf28374406d13e879724bfe3b{name}"
         self.selector = MySelect()
         self._attr_icon = icon
+        self._attr_native_value = "snälla"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
-        self._update_attr()
+        self.update()
 
     @callback
-    def _update_attr(self) -> None:
+    def update(self) -> None:  # def _update_attr(self) -> None:
         """Update _attr."""
-        # print(self.coordinator.data)
-        tree = self.coordinator.data
-        return_string = ""
-
-        if self._attr_name == CONF_AREA_NAME:
-            return self.traffic_area
-
-        for message in tree.findall(".//message"):
-            return_string = message.find(self.api_name).text
-
-        if self.api_name == DATE:
-            (date, _, time) = return_string.partition("T")
-            return_string = time[0:5] + ", " + date
-
-        self._attr_native_value = return_string
-        # self._attr_native_value = self.entity_description.value_fn(
-        #     self.coordinator.data
-        # )
+        self.traffic_area = self.entry.data.get("area")
+        self._attr_native_value = "grillkorv"  # self._get_traffic_info()
+        self._attr_native_value = ""
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._update_attr()
+        self.update()
         return super()._handle_coordinator_update()
 
     # def update(self) -> None:

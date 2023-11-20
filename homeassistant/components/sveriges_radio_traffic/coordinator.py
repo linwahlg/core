@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
+import aiohttp
 import async_timeout
 import defusedxml.ElementTree as defET
-import requests
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class TrafficData:
-    """Dataclass for Trafikverket Train data."""
+    """Dataclass for SverigesRadio traffic data."""
 
     title: str
     message: str
@@ -49,19 +49,23 @@ class TrafficData:
 class SverigesRadioTrafficCoordinator(DataUpdateCoordinator):
     """My custom coordinator."""
 
-    def __init__(self, hass: HomeAssistant, area) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry, area, session: aiohttp.ClientSession
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             # Name of the data. For logging purposes.
-            name="My sensor",
+            name="Sveriges radio traffic",
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=10),
+            update_interval=timedelta(seconds=30),
         )
         self.traffic_area = area
+        self.hass = hass
+        self.session = session
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> TrafficData | None:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables
@@ -74,7 +78,6 @@ class SverigesRadioTrafficCoordinator(DataUpdateCoordinator):
             # Grab active context variables to limit data required to be fetched from API
             # Note: using context is not required if there is no need or ability to limit
             # data retrieved from API.
-
             states = await self._get_traffic_info()
             return states
 
@@ -84,18 +87,48 @@ class SverigesRadioTrafficCoordinator(DataUpdateCoordinator):
     async def _get_traffic_info(self) -> TrafficData | None:
         """Fetch traffic information from specific area."""
         # Obs! Below is dangerous if traffic_area isn't set, add security
-        response = requests.get(
+        # response = sr.call(method="traffic/messages?trafficareaname=" + self.traffic_area, payload={})
+
+        # """Asynchronously call the API."""
+        url = (
             "http://api.sr.se/api/v2/traffic/messages?trafficareaname="
-            + self.traffic_area,
-            timeout=10,
-        )
-        defET.fromstring(response.content)
-
-        states = TrafficData(
-            title="Title", message="message", time=13.5, exactlocation="Place"
+            + self.traffic_area
         )
 
-        return states
+        try:
+            async with self.session.get(
+                url, params="trafficareaname=" + self.traffic_area, timeout=8
+            ) as response:
+                if response.status != 200:
+                    return None
+                response_text = await response.text()
+                tree = defET.fromstring(response_text)
+
+                for message in tree.findall(".//message"):
+                    states = TrafficData(
+                        title=message.find("title").text,
+                        message=message.find("description").text,
+                        time=message.find("createddate").text,
+                        exactlocation=message.find("exactlocation").text,
+                    )
+                return states
+        except aiohttp.ClientError:
+            # Handle network-related errors here
+            return None
+
+        # response = requests.get(
+        #     "http://api.sr.se/api/v2/traffic/messages?trafficareaname="
+        #     + self.traffic_area,
+        #     timeout=10,
+        # )
+        # print(response)
+        # defET.fromstring(response.content)
+
+        # states = TrafficData(
+        #     title="Title", message="message", time=13.5, exactlocation="Place"
+        # )
+
+        # return states
 
         # return_string = ""
         # if self._attr_name == CONF_AREA_NAME:
