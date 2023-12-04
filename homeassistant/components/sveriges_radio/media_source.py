@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, ERROR_MESSAGE_NOT_INITIALIZED, FOLDERNAME
-from .sveriges_radio import Channel, SverigesRadio
+from .sveriges_radio import Source, SverigesRadio
 
 
 async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
@@ -181,7 +181,7 @@ class RadioMediaSource(MediaSource):
         return []
 
     @callback
-    async def _async_build_podcasts(self, program: Channel) -> list[BrowseMediaSource]:
+    async def _async_build_podcasts(self, program: Source) -> list[BrowseMediaSource]:
         """Build list of podcasts for a program."""
         radio = self.radio
 

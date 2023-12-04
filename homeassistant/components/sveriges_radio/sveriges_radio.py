@@ -1,10 +1,12 @@
 """Sveriges radio classes."""
 import aiohttp
 from defusedxml import ElementTree
+
 from homeassistant.components.media_source.error import Unresolvable
 
-class Channel:
-    """Class for a channel."""
+
+class Source:
+    """Class for an audio source."""
 
     def __init__(
         self,
@@ -17,11 +19,11 @@ class Channel:
         url=None,
         **kwargs,
     ):
-        """Init function for channel class."""
+        """Init function for audio source class."""
         self.sveriges_radio = sveriges_radio
 
         if not station_id:
-            raise Unresolvable("No such channel")
+            raise Unresolvable("No such audio source")
 
         self.station_id = station_id
         self.name = name
@@ -31,9 +33,9 @@ class Channel:
         self.url = url
 
     def __repr__(self):
-        """Represent a channel."""
+        """Represent an audio source."""
 
-        return "Channel(%s)" % self.name
+        return "Source(%s)" % self.name
 
 
 class SverigesRadio:
@@ -51,12 +53,12 @@ class SverigesRadio:
         try:
             async with self.session.get(url, timeout=8) as response:
                 if response.status != 200:
-                    raise Unresolvable("API Connection Issue")
-                
+                    return {}
+
                 response_text = await response.text()
                 return ElementTree.fromstring(response_text)
-        except aiohttp.ClientError:
-            raise Unresolvable("Client Error")
+        except aiohttp.ClientError as error:
+            raise Unresolvable("Client Error") from error
 
     async def resolve_station(self, station_id):
         """Resolve whether a station is a channel or a podcast."""
@@ -70,10 +72,10 @@ class SverigesRadio:
             podcast_id = podcast_data.find("podfile").attrib.get("id")
             return await self.podcast(podcast_id)
         raise Unresolvable("No valid id.")
-    
+
     def create_channel(self, data):
-        """Creates a channel object"""
-        return Channel(
+        """Create a channel object."""
+        return Source(
             sveriges_radio=self,
             name=data.attrib.get("name"),
             station_id=data.attrib.get("id"),
@@ -82,10 +84,10 @@ class SverigesRadio:
             image=data.find("image").text,
             url=data.find("liveaudio/url").text,
         )
-    
-    def create_program(self, data): 
-        """Creates a program object"""
-        return Channel(
+
+    def create_program(self, data):
+        """Create a program object."""
+        return Source(
             sveriges_radio=self,
             name=data.attrib.get("name"),
             station_id=data.attrib.get("id"),
@@ -94,8 +96,8 @@ class SverigesRadio:
         )
 
     def create_podcast(self, data):
-        """Creates a podcast object"""
-        return Channel(
+        """Create a podcast object."""
+        return Source(
             sveriges_radio=self,
             name=data.find("title").text,
             station_id=data.attrib.get("id"),
@@ -108,23 +110,23 @@ class SverigesRadio:
         channels = []
 
         for channel_data in data.find("channels"):
-            channels.append(self.create_program(channel_data))
+            channels.append(self.create_channel(channel_data))
 
         return channels
 
     async def channel(self, station_id):
         """Asynchronously get a specific channel."""
         data = await self.call(f"channels/{station_id}")
-        return self.create_program(data.find("channel"))
+        return self.create_channel(data.find("channel"))
 
     async def programs(self, programs_list, page_nr=1):
         """Asynchronously get all programs that contains podcasts."""
         data = await self.call(f"programs?page={page_nr}")
 
-        #End recursion
+        # End recursion
         if not data:
             return programs_list
-        
+
         if data.find("pagination") is not None:
             if int(data.find("pagination/page").text) != page_nr:
                 raise Unresolvable(f"Page {page_nr} doesn't exist")
@@ -134,7 +136,7 @@ class SverigesRadio:
                 continue
 
             programs_list.append(self.create_program(program_data))
-        
+
         if data.find("pagination") is not None:
             if (
                 page_nr < int(data.find("pagination/totalpages").text)
@@ -155,11 +157,11 @@ class SverigesRadio:
         """Asynchronously get all podcasts."""
         data = await self.call(f"podfiles?programid={program_id}&page={page_nr}")
 
-        #End recursion
+        # End recursion
         if not data:
             return podcasts_list
-        
-        if data.find("pagination") is not None:    
+
+        if data.find("pagination") is not None:
             if int(data.find("pagination/page").text) != page_nr:
                 raise Unresolvable(f"Page {page_nr} doesn't exist")
 
@@ -184,5 +186,3 @@ class SverigesRadio:
         """Asynchronously get a podcast."""
         data = await self.call(f"podfiles/{podcast_id}")
         return self.create_podcast(data.find("podfile"))
-
- 
