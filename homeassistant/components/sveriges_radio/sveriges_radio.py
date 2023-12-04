@@ -4,6 +4,8 @@ from defusedxml import ElementTree
 
 from homeassistant.components.media_source.error import Unresolvable
 
+from .const import API_URL
+
 
 class Source:
     """Class for an audio source."""
@@ -41,6 +43,8 @@ class Source:
 class SverigesRadio:
     """Class for Sveriges Radio API."""
 
+    api_url = API_URL
+
     def __init__(self, session: aiohttp.ClientSession, user_agent: str) -> None:
         """Init function for Sveriges Radio."""
         self.session = session
@@ -48,10 +52,10 @@ class SverigesRadio:
 
     async def call(self, method):
         """Asynchronously call the API."""
-        url = f"https://api.sr.se/api/v2/{method}"
-
         try:
-            async with self.session.get(url, timeout=8) as response:
+            async with self.session.get(
+                f"{self.api_url}{method}", timeout=8
+            ) as response:
                 if response.status != 200:
                     return {}
 

@@ -1,1 +1,1 @@
-"""Tests for the Sveriges Radio Audio integration."""
+"""Tests for the Sveriges Radio integration."""

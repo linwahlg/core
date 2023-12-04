@@ -10,6 +10,8 @@ FOLDERNAME: Final = "Podcasts"
 
 ERROR_MESSAGE_NOT_INITIALIZED: Final = "Sveriges Radio not initialized"
 
+API_URL: Final = "https://api.sr.se/api/v2/"
+
 AREAS = [
     "Norrbotten",
     "Västerbotten",
