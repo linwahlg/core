@@ -23,15 +23,18 @@ class RadioMediaSource(MediaSource):
     name = "Sveriges Radio"
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initializes the RadioMediaSource class"""
         super().__init__(DOMAIN)
         self.hass = hass
         self.entry = entry
 
     @property
     def radio(self) -> SverigesRadio | None:
+        """Retrieves the Sveriges Radio instance from Home Assistant's data"""
         return self.hass.data.get(DOMAIN)
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
+        """Resolves a selected Radio station to a streaming URL and returns a PlayMedia object"""
         radio = self.radio or _raise_unresolvable(ERROR_MESSAGE_NOT_INITIALIZED)
 
         station = await radio.resolve_station(station_id=item.identifier) or \
@@ -40,6 +43,7 @@ class RadioMediaSource(MediaSource):
         return PlayMedia(station.url, "audio/mpeg")
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
+        """Returns media items for browsing, structured as BrowseMediaSource objects"""
         radio = self.radio or _raise_browse_error()
 
         category, _, program_info = (item.identifier or "").partition("/")
@@ -58,12 +62,14 @@ class RadioMediaSource(MediaSource):
         )
 
     async def _build_media_children(self, item: MediaSourceItem, category: str) -> list[BrowseMediaSource]:
+        """Builds and returns a list of BrowseMediaSource objects as children media items based on the category specified in the MediaSourceItem."""
         if category == FOLDERNAME:
             return await self._async_build_programs(item)
         return await self._async_build_channels(item)
 
     @callback
     async def _async_build_channels(self, item: MediaSourceItem) -> list[BrowseMediaSource]:
+        """Builds a list of channel BrowseMediaSource objects for the given media item"""
         category, _, _ = (item.identifier or "").partition("/")
         if category:
             return []
@@ -119,15 +125,15 @@ def _create_browse_media_source(entity, media_content_type, can_play, identifier
 
 
 def _raise_unresolvable(error_message: str):
-    """Raise an Unresolvable error with the given message."""
+    """Raise an Unresolvable error with the given message"""
     raise Unresolvable(error_message)
 
 def _raise_browse_error():
-    """Raise a BrowseError when the radio is not initialized."""
+    """Raise a BrowseError when the radio is not initialized"""
     raise BrowseError(ERROR_MESSAGE_NOT_INITIALIZED)
 
 def _create_podcast_root() -> BrowseMediaSource:
-    """Create a root BrowseMediaSource for podcasts."""
+    """Create a root BrowseMediaSource for podcasts"""
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=FOLDERNAME,
@@ -140,7 +146,7 @@ def _create_podcast_root() -> BrowseMediaSource:
     )
 
 def _determine_title(category: str, program_info: str) -> str:
-    """Determine the title for the media based on category and program information."""
+    """Determine the title for the media based on category and program information"""
     if category == FOLDERNAME and program_info:
         return program_info  # Or a more appropriate title based on program_info
     if category == FOLDERNAME:
