@@ -5,8 +5,8 @@ from defusedxml import ElementTree
 from homeassistant.components.media_source.error import Unresolvable
 
 
-class Channel:
-    """Class for a channel."""
+class Source:
+    """Class for a media source."""
 
     def __init__(
         self,
@@ -19,11 +19,11 @@ class Channel:
         url=None,
         **kwargs,
     ):
-        """Init function for channel class."""
+        """Init function for media source class."""
         self.sveriges_radio = sveriges_radio
 
         if not station_id:
-            raise Unresolvable("No such channel")
+            raise Unresolvable("No such media source")
 
         self.station_id = station_id
         self.name = name
@@ -33,9 +33,9 @@ class Channel:
         self.url = url
 
     def __repr__(self):
-        """Represent a channel."""
+        """Represent a media source."""
 
-        return "Channel(%s)" % self.name
+        return "Source(%s)" % self.name
 
 
 class SverigesRadio:
@@ -88,7 +88,7 @@ class SverigesRadio:
             image = channel_data.find("image").text
             url = channel_data.find("liveaudio/url").text
 
-            channel = Channel(
+            channel = Source(
                 sveriges_radio=self,
                 name=name,
                 station_id=station_id,
@@ -115,7 +115,7 @@ class SverigesRadio:
         image = channel_data.find("image").text
         url = channel_data.find("liveaudio/url").text
 
-        channel = Channel(
+        channel = Source(
             sveriges_radio=self,
             name=name,
             station_id=station_id,
@@ -149,7 +149,7 @@ class SverigesRadio:
             siteurl = program_data.find("programurl").text
             program_image = program_data.find("programimage").text
 
-            program = Channel(
+            program = Source(
                 sveriges_radio=self,
                 name=name,
                 station_id=station_id,
@@ -182,7 +182,7 @@ class SverigesRadio:
         siteurl = program_data.find("programurl").text
         program_image = program_data.find("programimage").text
 
-        program = Channel(
+        program = Source(
             sveriges_radio=self,
             name=name,
             station_id=station_id,
@@ -211,7 +211,7 @@ class SverigesRadio:
             name = podcast_data.find("title").text
             url = podcast_data.find("url").text
 
-            podcast = Channel(
+            podcast = Source(
                 sveriges_radio=self,
                 name=name,
                 station_id=station_id,
@@ -244,7 +244,7 @@ class SverigesRadio:
         name = podcast_data.find("title").text
         url = podcast_data.find("url").text
 
-        podcast = Channel(
+        podcast = Source(
             sveriges_radio=self,
             name=name,
             station_id=station_id,
