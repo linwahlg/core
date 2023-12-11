@@ -1,4 +1,4 @@
-"""Test the Sveriges Radio Audio config flow."""
+"""Test the Sveriges Radio config flow."""
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -24,7 +24,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.sveriges_radio_audio.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.sveriges_radio.config_flow.PlaceholderHub.authenticate",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -54,7 +54,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.sveriges_radio_audio.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.sveriges_radio.config_flow.PlaceholderHub.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -77,7 +77,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.sveriges_radio_audio.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.sveriges_radio.config_flow.PlaceholderHub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
