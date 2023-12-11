@@ -52,6 +52,7 @@ class SverigesRadioMediaSource(MediaSource):
         category, _, program_info = (item.identifier or "").partition("/")
 
         if category == FOLDERNAME and program_info:
+            radio = self.radio or _raise_browse_error()
             program = await radio.program(program_info)
             title = program.name
         elif category == FOLDERNAME:
@@ -68,25 +69,23 @@ class SverigesRadioMediaSource(MediaSource):
             can_play=False,
             can_expand=True,
             children_media_class=MediaClass.DIRECTORY,
-            children=await self._build_media_children(item, category),
+            children=await self._build_media_children(item, category, program_info),
         )
 
     async def _build_media_children(
-        self, item: MediaSourceItem, category: str
+        self, item: MediaSourceItem, category: str, program_info: str
     ) -> list[BrowseMediaSource]:
         """Build and return a list of BrowseMediaSource objects as children media items based on the category specified in the MediaSourceItem."""
         if category == FOLDERNAME:
-            return await self._async_build_programs(item)
-        return await self._async_build_channels(item)
+            return await self._async_build_programs(item, program_info)
+        return [
+            *await self._async_build_channels(),
+            *await self._async_build_programs(item, program_info),
+        ]
 
     @callback
-    async def _async_build_channels(
-        self, item: MediaSourceItem
-    ) -> list[BrowseMediaSource]:
+    async def _async_build_channels(self) -> list[BrowseMediaSource]:
         """Build a list of channel BrowseMediaSource objects for the given media item."""
-        category, _, _ = (item.identifier or "").partition("/")
-        if category:
-            return []
 
         radio = self.radio or _raise_browse_error()
         channels = await radio.channels()
@@ -98,16 +97,15 @@ class SverigesRadioMediaSource(MediaSource):
 
     @callback
     async def _async_build_programs(
-        self, item: MediaSourceItem
+        self, item: MediaSourceItem, program_info: str
     ) -> list[BrowseMediaSource]:
         radio = self.radio or _raise_browse_error()
-        category, _, program_code = (item.identifier or "").partition("/")
 
         if not item.identifier:
             return [_create_podcast_root()]
 
-        if program_code:
-            program = await radio.program(program_code)
+        if program_info:
+            program = await radio.program(program_info)
             return await self._async_build_podcasts(program)
 
         programs = await radio.programs(programs_list=[])
