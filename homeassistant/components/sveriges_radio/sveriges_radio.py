@@ -66,15 +66,19 @@ class SverigesRadio:
 
     async def resolve_station(self, station_id):
         """Resolve whether a station is a channel or a podcast."""
-        channel_data = await self.call(f"channels/{station_id}")
-        podcast_data = await self.call(f"podfiles/{station_id}")
+        data = await self.call(f"channels/{station_id}")
 
-        if channel_data != {}:
-            channel_id = channel_data.find("channel").attrib.get("id")
-            return await self.channel(channel_id)
-        if podcast_data != {}:
-            podcast_id = podcast_data.find("podfile").attrib.get("id")
-            return await self.podcast(podcast_id)
+        if data:
+            if data.find("channel"):
+                channel_id = data.find("channel").attrib.get("id")
+                return await self.channel(channel_id)
+
+        data = await self.call(f"podfiles/{station_id}")
+        if data:
+            if data.find("podfile"):
+                podcast_id = data.find("podfile").attrib.get("id")
+                return await self.podcast(podcast_id)
+
         raise Unresolvable("No valid id.")
 
     def create_channel(self, data):
@@ -111,10 +115,15 @@ class SverigesRadio:
     async def channels(self):
         """Asynchronously get all channels."""
         data = await self.call("channels")
+
         channels = []
 
-        for channel_data in data.find("channels"):
-            channels.append(self.create_channel(channel_data))
+        if not data:
+            return channels
+
+        if data.find("channels"):
+            for channel_data in data.find("channels"):
+                channels.append(self.create_channel(channel_data))
 
         return channels
 
