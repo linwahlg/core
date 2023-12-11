@@ -453,7 +453,6 @@ FLOWS = {
         "sun",
         "surepetcare",
         "sveriges_radio",
-        "sveriges_radio_traffic",
         "switchbee",
         "switchbot",
         "switcher_kis",
