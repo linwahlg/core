@@ -47,7 +47,14 @@ class RadioMediaSource(MediaSource):
         radio = self.radio or _raise_browse_error()
 
         category, _, program_info = (item.identifier or "").partition("/")
-        title = _determine_title(category, program_info)
+
+        if category == FOLDERNAME and program_info:
+            program = await radio.program(program_info)
+            title = program.name
+        elif category == FOLDERNAME:
+            title = FOLDERNAME
+        else:
+            title = "Sveriges Radio"
 
         return BrowseMediaSource(
             domain=DOMAIN,
