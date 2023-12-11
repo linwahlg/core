@@ -26,3 +26,18 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
    :target: https://demo.home-assistant.io
 .. |screenshot-integrations| image:: https://raw.githubusercontent.com/home-assistant/core/dev/docs/screenshot-integrations.png
    :target: https://home-assistant.io/integrations/
+
+Sveriges Radio integration
+---------------------
+
+This repository also includes the Sveriges Radio integration, which lets you stream music and podcasts from Sveriges Radio, as well as get access to local traffic information.
+
+Set up: 
+
+1. Follow the instructions above for installing home-assistant on your preferred platform. Note that the integration is develop for running in a home-assistant container, and support is not provided for other installation methods and devices.
+
+2. After starting home-assistant, go to Settings → Devices and services → Add integration and search for Sveriges Radio. After choosing the integration you will be asked to pick the area you want traffic information from in the drop down menu. After choosing your traffic area you can choose to connect the sensors to an area in your house, or you can leave it unconnected (recommended).
+
+Using it:
+
+Traffic information can be found in text format under the overview tab. Music and podcasts can be found under the media brower tab. Podcasts are stored in folders sorted by the program that produced them.
