@@ -1220,8 +1220,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
 /homeassistant/components/sveriges_radio/ @LudvigLemner
-/homeassistant/components/sveriges_radio_traffic/ @OskarJakobsson
-/tests/components/sveriges_radio_traffic/ @OskarJakobsson
 /homeassistant/components/swiss_hydrological_data/ @fabaff
 /homeassistant/components/swiss_public_transport/ @fabaff
 /homeassistant/components/switch/ @home-assistant/core

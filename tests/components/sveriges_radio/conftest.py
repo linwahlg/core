@@ -2,12 +2,15 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 import pytest
 
+from homeassistant.components.sveriges_radio.sveriges_radio import SverigesRadio
 from homeassistant.components.sveriges_radio.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
 
 
 @pytest.fixture
@@ -19,6 +22,14 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     ) as mock_setup_entry:
         yield mock_setup_entry
 
+
+
+@pytest.fixture
+async def mock_sveriges_radio():
+    """Create a mock Sveriges Radio instance."""
+    mock_session = AsyncMock(spec=aiohttp.ClientSession)
+    user_agent = "TestUserAgent"
+    return SverigesRadio(session=mock_session, user_agent=user_agent)
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
@@ -36,3 +47,4 @@ def async_setup_sr(hass: HomeAssistant, config_entry):
         await hass.async_block_till_done()
 
     return _wrapper
+

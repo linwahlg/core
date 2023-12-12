@@ -1,5 +1,7 @@
 """Test the Sveriges Radio config flow."""
-from unittest.mock import AsyncMock
+
+from unittest.mock import AsyncMock, patch
+
 
 import pytest
 import voluptuous as vol
@@ -44,12 +46,19 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == TITLE
+    assert result2["data"] == {
+        CONF_AREA: area,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_invalid_traffic_area(hass: HomeAssistant) -> None:
     """Test that an invalid area raises an error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with pytest.raises(vol.error.MultipleInvalid):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -67,7 +76,6 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
