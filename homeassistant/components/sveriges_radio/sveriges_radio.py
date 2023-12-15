@@ -68,16 +68,14 @@ class SverigesRadio:
         """Resolve whether a station is a channel or a podcast."""
         data = await self.call(f"channels/{station_id}")
 
-        if data:
-            if data.find("channel"):
-                channel_id = data.find("channel").attrib.get("id")
-                return await self.channel(channel_id)
+        if data and data.find("channel"):
+            channel_id = data.find("channel").attrib.get("id")
+            return await self.channel(channel_id)
 
         data = await self.call(f"podfiles/{station_id}")
-        if data:
-            if data.find("podfile"):
-                podcast_id = data.find("podfile").attrib.get("id")
-                return await self.podcast(podcast_id)
+        if data and data.find("podfile"):
+            podcast_id = data.find("podfile").attrib.get("id")
+            return await self.podcast(podcast_id)
 
         raise Unresolvable("No valid id.")
 
@@ -140,9 +138,11 @@ class SverigesRadio:
         if not data:
             return programs_list
 
-        if data.find("pagination") is not None:
-            if int(data.find("pagination/page").text) != page_nr:
-                raise Unresolvable(f"Page {page_nr} doesn't exist")
+        if (
+            data.find("pagination") is not None
+            and int(data.find("pagination/page").text) != page_nr
+        ):
+            raise Unresolvable(f"Page {page_nr} doesn't exist")
 
         for program_data in data.find("programs"):
             if program_data.find("haspod").text != "true":
@@ -150,14 +150,14 @@ class SverigesRadio:
 
             programs_list.append(self.create_program(program_data))
 
-        if data.find("pagination") is not None:
-            if (
-                page_nr < int(data.find("pagination/totalpages").text)
-                and data.find("pagination/nextpage") is not None
-            ):
-                programs_list = await self.programs(
-                    programs_list=programs_list, page_nr=page_nr + 1
-                )
+        if (
+            data.find("pagination") is not None
+            and page_nr < int(data.find("pagination/totalpages").text)
+            and data.find("pagination/nextpage") is not None
+        ):
+            programs_list = await self.programs(
+                programs_list=programs_list, page_nr=page_nr + 1
+            )
 
         return programs_list
 
@@ -174,24 +174,26 @@ class SverigesRadio:
         if not data:
             return podcasts_list
 
-        if data.find("pagination") is not None:
-            if int(data.find("pagination/page").text) != page_nr:
-                raise Unresolvable(f"Page {page_nr} doesn't exist")
+        if (
+            data.find("pagination") is not None
+            and int(data.find("pagination/page").text) != page_nr
+        ):
+            raise Unresolvable(f"Page {page_nr} doesn't exist")
 
         for podcast_data in data.find("podfiles"):
             podcasts_list.append(self.create_podcast(podcast_data))
 
-        if data.find("pagination") is not None:
-            if (
-                page_nr < int(data.find("pagination/totalpages").text)
-                and page_nr < 24
-                and data.find("pagination/nextpage") is not None
-            ):
-                podcasts_list = await self.podcasts(
-                    program_id=program_id,
-                    podcasts_list=podcasts_list,
-                    page_nr=page_nr + 1,
-                )
+        if (
+            data.find("pagination") is not None
+            and page_nr < int(data.find("pagination/totalpages").text)
+            and page_nr < 24
+            and data.find("pagination/nextpage") is not None
+        ):
+            podcasts_list = await self.podcasts(
+                program_id=program_id,
+                podcasts_list=podcasts_list,
+                page_nr=page_nr + 1,
+            )
 
         return podcasts_list
 
