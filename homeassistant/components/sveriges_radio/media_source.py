@@ -12,7 +12,7 @@ from homeassistant.components.media_source.models import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, ERROR_MESSAGE_NOT_INITIALIZED, FOLDERNAME
+from .const import DOMAIN, ERROR_MESSAGE_NOT_INITIALIZED, FOLDERNAME, NAME
 from .sveriges_radio import Source, SverigesRadio
 
 
@@ -24,7 +24,7 @@ async def async_get_media_source(hass: HomeAssistant) -> SverigesRadioMediaSourc
 class SverigesRadioMediaSource(MediaSource):
     """Class for representing the Media Source."""
 
-    name = "Sveriges Radio"
+    name = NAME
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the RadioMediaSource class."""
@@ -58,7 +58,7 @@ class SverigesRadioMediaSource(MediaSource):
         elif category == FOLDERNAME:
             title = FOLDERNAME
         else:
-            title = "Sveriges Radio"
+            title = NAME
 
         return BrowseMediaSource(
             domain=DOMAIN,
@@ -170,4 +170,4 @@ def _determine_title(category: str, program_info: str) -> str:
         return program_info  # Or a more appropriate title based on program_info
     if category == FOLDERNAME:
         return FOLDERNAME
-    return "Sveriges Radio"
+    return NAME

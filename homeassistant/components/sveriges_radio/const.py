@@ -44,3 +44,5 @@ INFO = [
 ]
 
 TITLE = "Sveriges Radio Traffic"
+
+NAME = "Sveriges Radio"
